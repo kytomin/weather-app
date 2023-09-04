@@ -1,6 +1,6 @@
 # Weather App
 
-powered weatherapi.com
+Powered by weatherapi.com
 
 ## Stack
 
