@@ -22,7 +22,7 @@
         android:id="@+id/temp_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/temp"
+        android:text="TEMP"
         android:maxLines="1"
         android:gravity="center_horizontal"
         android:textSize="60sp" />
@@ -32,6 +32,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="center_horizontal"
+        android:gravity="center"
         tools:ignore="UseCompoundDrawables">
 
         <ImageView
@@ -47,10 +48,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:text="@string/comment"
             android:maxLines="1"
             android:layout_gravity="center_vertical"
             android:textFontWeight="700"
             android:textSize="18sp" />
+
+
     </LinearLayout>
+
 </LinearLayout>

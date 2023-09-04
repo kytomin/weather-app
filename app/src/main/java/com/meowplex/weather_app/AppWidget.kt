@@ -12,7 +12,6 @@ import com.meowplex.weather_app.mapper.*
 import com.meowplex.weather_app.model.TemperatureUnits
 import com.meowplex.weather_app.model.WeatherPreviewModel
 import com.meowplex.weather_app.repository.ApiRepository
-import com.meowplex.weather_app.repository.LocationRepository
 import com.meowplex.weather_app.repository.SharedPrefsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.core.SingleObserver
@@ -26,30 +25,10 @@ import javax.inject.Inject
 class AppWidget : AppWidgetProvider() {
 
     @Inject
-    lateinit var locationRepository: LocationRepository
-
-    @Inject
     lateinit var sharedPrefs: SharedPrefsRepository
 
     @Inject
     lateinit var apiRepository: ApiRepository
-
-    private var updatingObserver = { it: Boolean ->
-        if (!it) {
-            locationRepository.startLocationUpdates()
-        }
-    }
-
-    override fun onEnabled(context: Context?) {
-        locationRepository.isUpdating.observeForever(updatingObserver)
-        super.onEnabled(context)
-    }
-
-    override fun onDisabled(context: Context?) {
-        locationRepository.isUpdating.removeObserver(updatingObserver)
-        locationRepository.stopLocationUpdates()
-        super.onDisabled(context)
-    }
 
     override fun onUpdate(
         context: Context,
@@ -110,52 +89,48 @@ class AppWidget : AppWidgetProvider() {
         context: Context
     ) {
 
-        if (locationRepository.isUpdating.value == false)
-            locationRepository.startLocationUpdates()
-        locationRepository.lastLocation.observeForever {
 
-            val location = it
-                ?: sharedPrefs.getLocation()
-                ?: Constants.defaultLocation
+        val location = sharedPrefs.getLocation()
+            ?: Constants.defaultLocation
 
-            val single = apiRepository.getWeatherPreview(location)
+        val single = apiRepository.getWeatherPreview(location)
 
-            val observer = object : SingleObserver<WeatherPreviewModel> {
+        val observer = object : SingleObserver<WeatherPreviewModel> {
 
-                override fun onSuccess(weather: WeatherPreviewModel) {
-                    views.setTextViewText(R.id.location_text, weather.city)
-                    views.setTextViewText(
-                        R.id.temp_text,
-                        weather.temp.getValue(
-                            tempUnit = sharedPrefs.getTempUnit() ?: TemperatureUnits.Celsius
-                        ) + "℃"
+            override fun onSuccess(weather: WeatherPreviewModel) {
+                views.setTextViewText(R.id.location_text, weather.city)
+                views.setTextViewText(
+                    R.id.temp_text,
+                    weather.temp.getValue(
+                        tempUnit = sharedPrefs.getTempUnit() ?: TemperatureUnits.Celsius
                     )
-                    views.setTextViewText(R.id.comment_text, weather.comment)
-                    views.setImageViewResource(
-                        R.id.image_view,
-                        R.drawable::class.java.getResId(weather.iconRes)
-                    )
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                }
-
-                override fun onSubscribe(d: Disposable) {
-                }
-
-
-                override fun onError(e: Throwable) {
-                    views.setTextViewText(R.id.location_text, context.getString(R.string.error))
-                    views.setTextViewText(R.id.temp_text, "X")
-                    views.setTextViewText(R.id.comment_text, context.getString(R.string.error))
-                    views.setImageViewResource(R.id.image_view, R.drawable.ic_error)
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                }
+                )
+                views.setTextViewText(R.id.comment_text, weather.comment)
+                views.setImageViewResource(
+                    R.id.image_view,
+                    R.drawable::class.java.getResId(weather.iconRes)
+                )
+                appWidgetManager.updateAppWidget(appWidgetId, views)
             }
 
-            single.subscribeOn(Schedulers.io()).subscribe(observer)
+            override fun onSubscribe(d: Disposable) {
+            }
+
+
+            override fun onError(e: Throwable) {
+                views.setTextViewText(R.id.location_text, context.getString(R.string.error))
+                views.setTextViewText(R.id.temp_text, "X")
+                views.setTextViewText(R.id.comment_text, context.getString(R.string.error))
+                views.setImageViewResource(R.id.image_view, R.drawable.ic_error)
+                appWidgetManager.updateAppWidget(appWidgetId, views)
+            }
         }
 
+        single.subscribeOn(Schedulers.io()).subscribe(observer)
     }
+
 }
+
 
 
 
