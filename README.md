@@ -1,4 +1,4 @@
-# weather-app
+# Weather App
 
 powered weatherapi.com
 
